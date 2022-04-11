@@ -2,7 +2,6 @@ include("struct/tree.jl")
 
 """
 Construit un arbre de décision par résolution d'un programme linéaire en nombres entiers
-
 Entrées :
 - x : caractéristiques des données d'entraînement
 - y : classe des données d'entraînement
@@ -11,13 +10,17 @@ Entrées :
 - mu (optionnel, utilisé en multivarié): distance minimale à gauche d'une séparation où aucune donnée ne peut se trouver (i.e., pour la séparation ax <= b, il n'y aura aucune donnée dans ]b - ax - mu, b - ax[) (10^-4 par défaut)
 - time_limits (optionnel) : temps maximal de résolution (-1 si le temps n'est pas limité) (-1 par défaut)
 """
-function build_tree(x::Matrix{Float64}, y::Vector{Int64}, D::Int64;multivariate::Bool=false, time_limit::Int64 = -1, mu::Float64=10^(-4))
+function build_tree_2(x::Matrix{Float64}, y::Vector{Int64}, D::Int64;multivariate::Bool=false, time_limit::Int64 = -1, mu::Float64=10^(-4))
     
     dataCount = length(y) # Nombre de données d'entraînement
     featuresCount = length(x[1, :]) # Nombre de caractéristiques
     classCount = length(unique(y)) # Nombre de classes différentes
     sepCount = 2^D - 1 # Nombre de séparations de l'arbre
     leavesCount = 2^D # Nombre de feuilles de l'arbre
+    w = Array{Int64}(ones(dataCount))
+    for i in 1:dataCount
+        w[i] = rand(1:4)
+    end
 
     m = Model(CPLEX.Optimizer) 
     set_silent(m)
@@ -101,9 +104,9 @@ function build_tree(x::Matrix{Float64}, y::Vector{Int64}, D::Int64;multivariate:
 
     ## Déclaration de l'objectif
     if multivariate
-        @objective(m, Max,  sum(u_at[i, 1] for i in 1:dataCount))
+        @objective(m, Max, sum(w[i]*u_at[i, 1] for i in 1:dataCount))
     else
-        @objective(m, Max, sum(u_at[i, 1] for i in 1:dataCount))
+        @objective(m, Max, sum(w[i]*u_at[i, 1] for i in 1:dataCount))
     end
 
     classif = @expression(m, sum(u_at[i, 1] for i in 1:dataCount))
@@ -154,9 +157,7 @@ end
 
 """
 FONCTION SIMILAIRE A LA PRECEDENTE UTILISEE UNIQUEMENT SI VOUS FAITES DES REGROUPEMENTS 
-
 Construit un arbre de décision par résolution d'un programme linéaire en nombres entiers
-
 Entrées :
 - clusters : partition des données d'entraînement (chaque cluster contient des données de même classe)
 - D : Nombre maximal de séparations d'une branche (profondeur de l'arbre - 1)
@@ -164,13 +165,17 @@ Entrées :
 - mu (optionnel, utilisé en multivarié): distance minimale à gauche d'une séparation où aucune donnée ne peut se trouver (i.e., pour la séparation ax <= b, il n'y aura aucune donnée dans ]b - ax - mu, b - ax[) (10^-4 par défaut)
 - time_limits (optionnel) : temps maximal de résolution (-1 si le temps n'est pas limité) (-1 par défaut)
 """
-function build_tree(clusters::Vector{Cluster}, D::Int64;multivariate::Bool=false, time_limit::Int64 = -1, mu::Float64=10^(-4))
+function build_tree_2(clusters::Vector{Cluster}, D::Int64;multivariate::Bool=false, time_limit::Int64 = -1, mu::Float64=10^(-4))
     
     clusterCount = length(clusters) # Nombre de données d'entraînement
     featuresCount = length(clusters[1].lBounds) # Nombre de caractéristiques
     classCount = length(unique(c -> c.class, clusters)) # Nombre de classes différentes
     sepCount = 2^D - 1 # Nombre de séparations de l'arbre
     leavesCount = 2^D # Nombre de feuilles de l'arbre
+    w = Array{Int64}(ones(dataCount))
+    for i in 1:dataCount
+        w[i] = rand(1:4)
+    end
     
     m = Model(CPLEX.Optimizer) 
 
@@ -259,9 +264,9 @@ function build_tree(clusters::Vector{Cluster}, D::Int64;multivariate::Bool=false
 
     ## Déclaration de l'objectif
     if multivariate
-        @objective(m, Max, sum(length(clusters[i].dataIds) * u_at[i, 1] for i in 1:clusterCount))
+        @objective(m, Max, sum(length(clusters[i].dataIds) * u_at[i, 1] * w[i] for i in 1:clusterCount))
     else
-        @objective(m, Max, sum(length(clusters[i].dataIds) * u_at[i, 1] for i in 1:clusterCount))
+        @objective(m, Max, sum(length(clusters[i].dataIds) * u_at[i, 1] * w[i] for i in 1:clusterCount))
     end
 
     starting_time = time()
@@ -307,4 +312,3 @@ function build_tree(clusters::Vector{Cluster}, D::Int64;multivariate::Bool=false
 
     return T, objective_value(m), resolution_time, gap
 end
-

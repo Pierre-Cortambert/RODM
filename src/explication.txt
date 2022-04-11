@@ -1,0 +1,6 @@
+building_tree_2.jl
+
+comme building_tree.jl :
+l 2& : ajout w[i] = rand(1:4) (detaille dataCount)
+l107 et 109 : ajout des poids
+pareil après
