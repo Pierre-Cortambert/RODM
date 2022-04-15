@@ -1,10 +1,11 @@
-include("building_tree.jl")
+#include("building_tree.jl")
+include("callback.jl")
 include("utilities.jl")
 include("merge.jl")
 
 function main_merge()
-    for dataSetName in ["iris", "seeds", "wine", "red-wine-quality.txt", "white-wine-quality.txt"]
-        
+    for dataSetName in ["red_wine_quality", "white-wine-quality"] #"iris", "seeds", "wine",
+
         print("=== Dataset ", dataSetName)
         
         # Préparation des données

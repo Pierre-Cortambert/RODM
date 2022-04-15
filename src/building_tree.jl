@@ -168,7 +168,7 @@ function build_tree(clusters::Vector{Cluster}, D::Int64;multivariate::Bool=false
     
     clusterCount = length(clusters) # Nombre de données d'entraînement
     featuresCount = length(clusters[1].lBounds) # Nombre de caractéristiques
-    classCount = maximum(unique(c -> c.class, clusters)) # Nombre de classes différentes
+    classCount = 8 # Nombre de classes différentes
     sepCount = 2^D - 1 # Nombre de séparations de l'arbre
     leavesCount = 2^D # Nombre de feuilles de l'arbre
     
